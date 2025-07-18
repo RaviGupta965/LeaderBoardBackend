@@ -37,6 +37,21 @@ export const getLeaderboard = async (req, res) => {
 };
 
 export const getHistory = async (req, res) => {
-  const history = await ClaimHistory.find().populate('userId').sort({ claimedAt: -1 });
-  res.json(history);
+  try {
+    const history = await ClaimHistory.find()
+      .populate('userId', 'name') // only populate the name field
+      .sort({ claimedAt: -1 });
+
+    const formatted = history.map(entry => ({
+      userId: entry.userId?._id,
+      userName: entry.userId?.name || "Unknown",
+      points: entry.points,
+      claimedAt: entry.claimedAt
+    }));
+
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch claim history" });
+  }
 };
+
